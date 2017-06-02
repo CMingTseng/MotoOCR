@@ -1,7 +1,7 @@
 package me.image.active;
 
-
 import android.app.Activity;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -34,6 +34,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -92,7 +94,7 @@ public class ImageMEActivity extends Activity implements SurfaceHolder.Callback 
 
     private GestureDetector gestureScanner;
 
-    public final static String DEFAULT_FOLDER = "/sdcard" + File.separator + Environment.DIRECTORY_DCIM + File.separator + "+ImageME";
+    public final static String DEFAULT_FOLDER = FolderFileUtils.getSDPath() + File.separator + Environment.DIRECTORY_DCIM + File.separator + "ImageME";
 
     //原始影像之資料夾
     public final static String IMAGE_FOLDER = DEFAULT_FOLDER + File.separator + "original";
@@ -150,6 +152,58 @@ public class ImageMEActivity extends Activity implements SurfaceHolder.Callback 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (FolderFileUtils.checkSDCardExist()) {
+                    if (!FolderFileUtils.checkExternalFolderFileExist(DEFAULT_FOLDER)) {
+                        FolderFileUtils.createFolderFile(DEFAULT_FOLDER);
+                    }
+                    if (!FolderFileUtils.checkExternalFolderFileExist(IMAGE_FOLDER)) {
+                        FolderFileUtils.createFolderFile(IMAGE_FOLDER);
+                    }
+                    if (!FolderFileUtils.checkExternalFolderFileExist(PROCESS_FOLDER)) {
+                        FolderFileUtils.createFolderFile(PROCESS_FOLDER);
+                    }
+                    File target = new File(IMAGE_FOLDER);
+                    final AssetManager am = getBaseContext().getAssets();
+                    final String[] ext = {"jpeg", "jpg", "JPG", "JPEG"};
+                    final String[] files = FolderFileUtils.getAssetsFilterFiles(am, new FolderFileUtils.FileExtensionFilter(ext));
+                    if (files != null) {
+                        for (String filename : files) {
+                            final File outFile = new File(target.toString() + File.separator + filename);
+                            if (!outFile.exists()) {
+                                InputStream in = null;
+                                OutputStream out = null;
+                                try {
+                                    in = am.open(filename);
+                                    out = new FileOutputStream(outFile);
+                                    FolderFileUtils.writeFile(in, out);
+                                } catch (IOException e) {
+                                    Log.e(TAG, "Failed to copy asset file: " + filename, e);
+                                } finally {
+                                    if (in != null) {
+                                        try {
+                                            in.close();
+                                        } catch (IOException e) {
+                                            // NOOP
+                                        }
+                                    }
+                                    if (out != null) {
+                                        try {
+                                            out.flush();
+                                            out.close();
+                                        } catch (IOException e) {
+                                            // NOOP
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }).start();
         jumpToPreviw();
     }
 
