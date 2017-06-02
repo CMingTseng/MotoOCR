@@ -15,6 +15,7 @@ import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.StrictMode;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -52,8 +53,7 @@ import me.image.util.FileUtiil;
 import me.image.util.ImageUtil;
 
 public class ImageMEActivity extends Activity implements SurfaceHolder.Callback {
-
-    private static final String LOGGER = ImageMEActivity.class.getName();
+    private static final String TAG = ImageMEActivity.class.getName();
     /**
      * Called when the activity is first created.
      */
@@ -92,13 +92,13 @@ public class ImageMEActivity extends Activity implements SurfaceHolder.Callback 
 
     private GestureDetector gestureScanner;
 
-    public final static String DEFAULT_FOLDER = "/sdcard/DCIM/ImageME";
+    public final static String DEFAULT_FOLDER = "/sdcard" + File.separator + Environment.DIRECTORY_DCIM + File.separator + "+ImageME";
 
     //原始影像之資料夾
-    public final static String IMAGE_FOLDER = DEFAULT_FOLDER + "/original";
+    public final static String IMAGE_FOLDER = DEFAULT_FOLDER + File.separator + "original";
 
     //影像處理後之資料夾
-    public final static String PROCESS_FOLDER = DEFAULT_FOLDER + "/process";
+    public final static String PROCESS_FOLDER = DEFAULT_FOLDER + File.separator + "process";
 
     private int fieldImgXY[] = new int[2];
 
@@ -151,8 +151,6 @@ public class ImageMEActivity extends Activity implements SurfaceHolder.Callback 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         jumpToPreviw();
-
-
     }
 
     /**
@@ -244,7 +242,7 @@ public class ImageMEActivity extends Activity implements SurfaceHolder.Callback 
         imgDir = new File(IMAGE_FOLDER);
         doScreenView(getImage());
         System.out.println("==>image view [" + mImageView01.getWidth() + "][" + mImageView01.getHeight() + "]");
-		    /*設定ImageView底圖*/
+            /*設定ImageView底圖*/
         //mImageView01.setImageDrawable(getResources().getDrawable(R.drawable.right));
         //mImageView02.setImageDrawable(getResources().getDrawable(R.drawable.irdc));
 
@@ -391,7 +389,7 @@ public class ImageMEActivity extends Activity implements SurfaceHolder.Callback 
                                                                  ByteArrayOutputStream stream = new ByteArrayOutputStream();
                                                                  bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                                                                  byte[] byteArray = stream.toByteArray();
-                                                                 Log.i(LOGGER, " byteArray size [" + byteArray.length + "]");
+                                                                 Log.i(TAG, " byteArray size [" + byteArray.length + "]");
                                                                  ImageService imageService = new ImageService();
                                                                  epaAirBean = imageService.doEPAService(byteArray, systemID);
 
@@ -445,7 +443,7 @@ public class ImageMEActivity extends Activity implements SurfaceHolder.Callback 
      * method jumpToLayout2：將layout由main.xml切換成mylayout.xml
      */
     public void jumpToShowDetail() {
-			  /* 將layout改成mylayout.xml */
+              /* 將layout改成mylayout.xml */
         setContentView(R.layout.showdetail);
         TextView checkresult = (TextView) findViewById(R.id.checkresult);
         TextView license = (TextView) findViewById(R.id.license);
@@ -465,7 +463,7 @@ public class ImageMEActivity extends Activity implements SurfaceHolder.Callback 
                 license.setText("辨視號碼:" + serviceCheckBean.getOcrResult());
                 brandType.setText("");
                 usedate.setText("");
-                Log.i(LOGGER, " errorMessage :" + epaAirBean.getMessage());
+                Log.i(TAG, " errorMessage :" + epaAirBean.getMessage());
                 message.setText(serviceCheckBean.getErrorMessage());
             }
         }
@@ -893,10 +891,10 @@ public class ImageMEActivity extends Activity implements SurfaceHolder.Callback 
 
 
         public void onPictureTaken(byte[] data, Camera camera) {
-            Log.i(LOGGER, " Eneter Method onPictureTaken :");
+            Log.i(TAG, " Eneter Method onPictureTaken :");
             //resetCamera();
             camera.stopPreview();
-            Log.i(LOGGER, " stopPreview camera");
+            Log.i(TAG, " stopPreview camera");
             String fileName = new Date().getTime() + ".jpeg";
             boolean isOK = false;
             try {
